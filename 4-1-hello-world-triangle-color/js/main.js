@@ -26,11 +26,15 @@ var rotX, rotY;			// Acumlulation
 
 function init()
 {	
-	// Init Model
-	vertices = [-0.5, 0.5, 0.,	// V0
-			    -0.5, -0.5, 0.,	// V1
-			    0.5, -0.5, 0.,	// V2
-			    0.5, 0.5, 0.	// V3
+	// Vertices de un cubo
+	vertices = [-0.5, 0.5, 0.5,		// V0
+			    -0.5, -0.5, 0.5,	// V1
+			    0.5, -0.5, 0.5,		// V2
+			    0.5, 0.5, 0.5,		// V3
+			    -0.5, 0.5, -0.5,	// V4
+			    -0.5, -0.5, -0.5,	// V5
+			    0.5, -0.5, -0.5,	// V6
+			    0.5, 0.5, -0.5,		// V7
 			    ];
 
 	colors = [1., 0., 0., 1.,
@@ -40,14 +44,15 @@ function init()
 			  ];
 
   	//TOPOLOGIA
-	//vertexIndex = [0,1,2, 0,2,3]; // gl.TRIANGLE
-	//vertexIndex = [0,1, 1,2, 2,3, 3,0]; // gl.LINES
+	//vertexIndex = [0,1,2, 0,2,3, 3,2,5, 3,5,4, 7,6,5, 7,5,4, 7,0,3, 7,3,4, 0,1,6, 0,6,7, 6,1,2, 6,2,5]; // gl.TRIANGLE triangulos con relleno
+	vertexIndex = [0,1, 1,2, 2,3, 3,0,   4,5, 5,6, 6,7, 7,4,  0,4, 1,5, 2,6, 3,7]; // gl.LINES
 	//vertexIndex = [0,1,2,3]; // gl.POINTS
 	//vertexIndex = [0,1,2,3]; // gl.LINE_LOOP
-	//vertexIndex = [0,1,2,3,0]; // gl.LINE_STRIP
+	//vertexIndex = [0,1,2,3,0]; // gl.LINE_STRIP unir puntos sin soltar un lapiz
 	//vertexIndex = [0,1,2, 0,2,3]; // gl.LINE_TRIANGLES traingulos sin relleno
+
 	//vertexIndex = [1,0,2,3]; // gl.TRIANGLE_STRIP este es para conectar vertices juntos, checar el orden de mis vertices
-	vertexIndex = [0,1,2,3]; // gl.TRIANGLE_FAN unes el primer punto con los demas, bueno para circulos
+	//vertexIndex = [0,1,2,3]; // gl.TRIANGLE_FAN unes el primer punto con los demas, bueno para circulos
 
 	pointSize = 12.;
 	color = [1., 1., 0., 1.];
@@ -186,7 +191,7 @@ function renderLoop()
 	var bufferType = gl.ELEMENT_ARRAY_BUFFER;
 	gl.bindBuffer(bufferType, ibo);
 
-	var primitiveType = gl.TRIANGLE_FAN;				// Cambiamos la primitiva a la que quyieramnos
+	var primitiveType = gl.LINES;				// Cambiamos la primitiva a la que quyieramnos
 	var offset = 0;									// Bytes offset in the buffer
 	var count = vertexIndex.length;					// Number of index to be rendered
 	var type = gl.UNSIGNED_SHORT;
