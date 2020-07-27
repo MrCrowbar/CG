@@ -11,21 +11,23 @@ function resizeWindow(event)
 
 function drawModeListOnChange(event){
 	var children = activeMaterial.children;
-	if(event == "Wireframe")
-    {
-    	children[0].material.wireframe = true;
+    switch(event){
+        case "Wireframe":
+            children[0].material.wireframe = true;
+            break;
+
+        case "Solid":
+            children[0].material.wireframe = false;
+            break;
+
+        case "Invisible":
+            activeMaterial.visible = false;
+            break;
+
+        case "Visible":
+            activeMaterial.visible = true;
+            break;
     }
-    else if(event == "Solid")
-    {
-    	children[0].material.wireframe = false;
-    }
-    else if(event == "Invisible")
-    {
-    	diamond.visible = false;
-    }
-	else if (event == "Visible"){
-		diamond.visible = true;
-	}
 }
 
 function colorOnChange(event)
@@ -34,7 +36,6 @@ function colorOnChange(event)
 }
 
 function materialsGuiOnChange(event){
-    //"Diamond","Steel","Glass","Rubber"
     var pos;
     switch(event){
         case "Diamond":
@@ -54,9 +55,23 @@ function materialsGuiOnChange(event){
             pos = activeMaterial.position;
             controls.target.set(pos.x,pos.y,pos.z);
             break;
-            
+
+        case "Rubber":
+            activeMaterial = rubber;
+            pos = activeMaterial.position;
+            controls.target.set(pos.x,pos.y,pos.z);
+            break;
         default:
             controls.target.set(5,5,5);
     }
+    controls.update();
+}
+
+function changeScene(event) {
+    if (event == 'Demo') activeScene = demoScene;
+    else activeScene = theoryScene;
+    var scenePos = activeScene.position;
+
+    controls.target.set(scenePos.x,scenePos.y,scenePos.z);
     controls.update();
 }

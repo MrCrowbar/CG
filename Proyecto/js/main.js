@@ -1,7 +1,9 @@
 "use strict"
 var canvas;
 var engine;
-var scene;
+var demoScene;
+var theoryScene;
+var activeScene;
 var camera;
 var shapes = [];
 var lights = [];
@@ -10,6 +12,7 @@ var diamond;
 var controls;
 var steel;
 var glass;
+var rubber;
 var activeMaterial;
 
 class Shape extends THREE.Mesh
@@ -60,9 +63,6 @@ class Structure extends THREE.Group{
         var geometry = new THREE.SphereGeometry(0.1,8,6);
         var material = new THREE.MeshStandardMaterial({color: "white"});
 
-        //var points = [];
-        //var lineMaterial = new THREE.LineBasicMaterial({color: "white", linewidth: 2});
-
         for (var i = 0; i < atoms; i++) {
             var sphere = new THREE.Mesh(geometry, material);
             sphere.position.set(positions[i][0], positions[i][1], positions[i][2]);
@@ -70,11 +70,6 @@ class Structure extends THREE.Group{
             sphere.name = "Atom " + i;
             this.add(sphere);
         }
-
-        //var lineGeometry = new THREE.BufferGeometry().setFromPoints(points);
-        //var conections = new THREE.Line(lineGeometry, lineMaterial);
-
-        //this.add(conections);
     }
 
 }
@@ -100,43 +95,45 @@ function addStructure(scene,structure){
     scene.add(structure);
 }
 
-
 function update()
 {
-    //controls.update();
     diamond.rotation.y += 0.01;
     steel.rotation.y -= 0.01;
+    glass.rotation.y += 0.01;
+    rubber.rotation.y -= 0.01;
 }
 
 function renderLoop() 
 {
-
-    camera.updateProjectionMatrix();
-    engine.render(scene, camera);
+    engine.render(activeScene, camera);
     update();
     requestAnimationFrame(renderLoop);
 }
+
 
 function main()
 { 
     // CANVAS
     canvas = document.getElementById("canvas");
 
-    // RENDERER ENGINE
-    engine = new THREE.WebGLRenderer({canvas: canvas, antialias: true});
-    engine.setSize(window.innerWidth, window.innerHeight);
-    engine.setClearColor(new THREE.Color(0.0, 0.0, 0.0), 1.);
-
     // SCENE
-    scene = new THREE.Scene();  
+    demoScene = new THREE.Scene();
+    theoryScene = new THREE.Scene();
+    theoryScene.background = new THREE.Color( 0xf0f0f0 );
+    activeScene = demoScene;
 
     // CAMERA
     camera = new THREE.PerspectiveCamera(60., canvas.width / canvas.height, 0.01, 10000.);  // CAMERA
     camera.position.set(0., 2., 8.);
-    camera.lookAt(scene.position);
-    camera.up.set(0,1,0);  
+    camera.lookAt(activeScene.position);
+    camera.up.set(0,1,0);
     controls = new THREE.OrbitControls(camera, canvas);
     controls.update();
+
+    // RENDERER ENGINE
+    engine = new THREE.WebGLRenderer({canvas: canvas, antialias: true});
+    engine.setSize(window.innerWidth, window.innerHeight);
+    engine.setClearColor(new THREE.Color(0.0, 0.0, 0.0), 1.);
 
     // MODELS
     // AXES HELPER
@@ -147,7 +144,7 @@ function main()
     var floor = new THREE.Mesh(new THREE.PlaneGeometry(20, 20), new THREE.MeshBasicMaterial({color: "grey",wireframe: true}));          
     floor.rotation.x = -Math.PI / 2.;
 
-
+    
     //ATOMS POSITIONS
     var positions = [
             [0,0,0],
@@ -175,8 +172,8 @@ function main()
         ];
 
     diamond = new Structure(18,positions,"blue");
-    diamond.position.set(-10,0,0);
-    addStructure(scene,diamond);
+    diamond.position.set(-7.5,0,0);
+    addStructure(demoScene,diamond);
 
     positions = [
         [1,0,1],
@@ -193,8 +190,8 @@ function main()
     ];
 
     steel = new Structure(9,positions,"grey");
-    steel.position.set(-5,0,0);
-    addStructure(scene,steel);
+    steel.position.set(-2.5,0,0);
+    addStructure(demoScene,steel);
 
     //GLASS
     positions = [
@@ -208,8 +205,33 @@ function main()
     ];
 
     glass = new Structure(5,positions,"yellow");
-    glass.position.set(0,0,0);
-    addStructure(scene,glass);
+    glass.position.set(2.5,0,0);
+    addStructure(demoScene,glass);
+
+    //RUBBER
+    positions = [
+        [0.66,0,0],
+        [0.33,0.4,0],
+        [0.15,0,0.15],
+        [0.15,0,-0.15],
+
+        [0.33,1,0],
+
+        [1,1.2,0],
+        [0.66,1.4,0],
+        [0.66,2,0],
+
+        [-0.33,1.4,0],
+        [-0.33,2,0],
+
+        [-0.66,1,0],
+        [-0.66,0.5,0],
+        [-1,1.2,0]
+    ];
+
+    rubber = new Structure(13,positions,"brown");
+    rubber.position.set(7.5,0,0);
+    addStructure(demoScene,rubber);
 
 
     var luz1 = new Luz();
@@ -220,26 +242,52 @@ function main()
 
     activeMaterial = diamond;
 
-    // SCENEGRAPH
-    scene.add(floor);
-    scene.add(axesHelper);
-    scene.add(camera);
+    var texture = new THREE.TextureLoader().load('./images/Youngs_Modulus.png');
+    var geometry = new THREE.BoxGeometry(10,10,10);
+    var material = new THREE.MeshBasicMaterial({map: texture});
+    var mesh = new THREE.Mesh(geometry,material);
+    mesh.position.set(0,0,0);
 
-    scene.add(luz1.pointLight);
-    scene.add(luz1.pointLightHelper);
-    scene.add(luz2.pointLight);
-    scene.add(luz2.pointLightHelper);
+    var luz3 = new Luz();
+    luz3.pointLight.position.set(0,12,0);
+
+    theoryScene.add(mesh);
+
+    var ambientLight = new THREE.AmbientLight('white', 0.0);
+    theoryScene.add(ambientLight);
+
+
+    // SCENEGRAPH
+    demoScene.add(floor);
+    demoScene.add(axesHelper);
+    demoScene.add(camera);
+
+    demoScene.add(luz1.pointLight);
+    demoScene.add(luz1.pointLightHelper);
+    demoScene.add(luz2.pointLight);
+    demoScene.add(luz2.pointLightHelper);
+    demoScene.add(luz3.pointLight);
+    demoScene.add(luz3.pointLightHelper);
+
+    theoryScene.add(luz1.pointLight.clone());
+    //theoryScene.add(luz1.pointLightHelper);
+    theoryScene.add(luz2.pointLight.clone());
+    //theoryScene.add(luz2.pointLightHelper);
+    theoryScene.add(luz3.pointLight.clone());
 
     //GUI
     var guiControls = {
+        scenes: "Demo",
         materials: "Diamond",
         modeList: "Solid",
         color: "#ffffff"
     };
 
     var datGui = new dat.GUI();
+    var scenes = ["Demo","Theory"];
     var materials = ["Diamond","Steel","Glass","Rubber"];
     var nameList = ["Solid","Wireframe","Invisible","Visible"];
+    var scenesGui = datGui.add(guiControls, 'scenes', scenes).name('Current Scene');
     var materialsGui = datGui.add(guiControls, 'materials', materials).name('Material mode');
     var drawModeList = datGui.add(guiControls, 'modeList', nameList).name('Draw Mode');
     var color = datGui.addColor(guiControls, 'color').name('Color');
@@ -247,6 +295,7 @@ function main()
 
     // EVENT-HANDLERS
     window.addEventListener('resize', resizeWindow, false);
+    scenesGui.onChange(changeScene);
     materialsGui.onChange(materialsGuiOnChange);
     drawModeList.onChange(drawModeListOnChange);
     color.onChange(colorOnChange);
