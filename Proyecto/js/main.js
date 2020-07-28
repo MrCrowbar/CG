@@ -16,6 +16,31 @@ var rubber;
 var activeMaterial;
 var theoryCube;
 var materialList = [];
+var swarm;
+
+
+class Swarm extends THREE.Group{
+    constructor(){
+        super();
+        var particleColor = new THREE.Color(0xffffff);
+        var geometry = new THREE.SphereGeometry(0.1,8,6);
+        var material = new THREE.MeshStandardMaterial({color: particleColor});
+        for (var i = 0; i < 50; i++){
+            var randX = Math.floor(Math.random() * 40) - 10;
+            var randY = Math.floor(Math.random() * 40) - 10;
+            var randZ = Math.floor(Math.random() * 40) - 10;
+            var sphere = new THREE.Mesh(geometry, material);
+            sphere.position.set(randX, randY, randZ);
+            this.add(sphere);
+        }
+    }
+
+    rotate(){
+        this.rotation.x += 0.01;
+        this.rotation.y -= 0.01;
+        this.rotation.z += 0.005;
+    }
+}
 
 class Structure extends THREE.Group{
     constructor(atoms,positions,texture,light){
@@ -38,14 +63,6 @@ class Structure extends THREE.Group{
             sphere.name = "Atom " + i;
             this.add(sphere);
         }
-        for (var i = 0; i < 10; i++){
-            var randX = Math.floor(Math.random() * 15) - 15
-            var randY = Math.floor(Math.random() * 15) - 15
-            var randZ = Math.floor(Math.random() * 15) - 15
-            var sphere = new THREE.Mesh(geometry, material);
-            sphere.position.set(randX, randY, randZ);
-            this.add(sphere);
-        }
     }
 
     start(){
@@ -62,11 +79,13 @@ class Structure extends THREE.Group{
             this.rotation.y += 0.01;
         }
     }
-
 }
+
 class TheoryCube extends THREE.Group {
     constructor(){
         super();
+        var canRotate;
+
         var texture1 = new THREE.TextureLoader().load('./images/theory/fracture.png');
         var texture2 = new THREE.TextureLoader().load('./images/theory/ductile-vs-brittle.png');
         var texture3 = new THREE.TextureLoader().load('./images/theory/elastic.png');
@@ -75,7 +94,6 @@ class TheoryCube extends THREE.Group {
         var texture6 = new THREE.TextureLoader().load('./images/theory/young.png');
 
         var geometry = new THREE.PlaneGeometry(14,10,1);
-
         var geometryTop = new THREE.PlaneGeometry(14,14,1);
         var geometryBottom = new THREE.PlaneGeometry(14,14,1);
 
@@ -93,12 +111,12 @@ class TheoryCube extends THREE.Group {
         var theoryPlane5 = new THREE.Mesh(geometryTop,material5);
         var theoryPlane6 = new THREE.Mesh(geometryBottom,material6);
 
-        theoryPlane1.position.set(0,0,0);
-        theoryPlane2.position.set(7,0,7);
-        theoryPlane3.position.set(-7,0,7);
-        theoryPlane4.position.set(0,0,14);
-        theoryPlane5.position.set(0,5,7);
-        theoryPlane6.position.set(0,-5,7);
+        theoryPlane1.position.set(0,0,-7); //0,0,0
+        theoryPlane2.position.set(7,0,0); //7,0,7
+        theoryPlane3.position.set(-7,0,0); //-7,0,7
+        theoryPlane4.position.set(0,0,7); //0,0,14
+        theoryPlane5.position.set(0,5,0); //0,5,7
+        theoryPlane6.position.set(0,-5,0); //0,-5,7
 
         theoryPlane1.rotateY(180 * Math.PI/180);
         theoryPlane2.rotateY(90 * Math.PI/180);
@@ -112,7 +130,20 @@ class TheoryCube extends THREE.Group {
         this.add(theoryPlane4);
         this.add(theoryPlane5);
         this.add(theoryPlane6);
+    }
 
+    start(){
+        this.canRotate = true;
+    }
+
+    stop(){
+        this.canRotate = false;
+    }
+
+    rotate(){
+        if (this.canRotate) {
+            this.rotation.y += 0.01;
+        }
     }
 }
 
@@ -139,6 +170,8 @@ function addStructure(scene,structure){
 
 function update()
 {
+    swarm.rotate();
+    theoryCube.rotate();
     diamond.rotate();
     steel.rotate();
     glass.rotate();
@@ -296,9 +329,11 @@ function main()
     rubber.start();
     addStructure(demoScene,rubber);
 
-    activeMaterial = diamond;
+    swarm = new Swarm();
+    addStructure(demoScene,swarm);
+
     theoryCube = new TheoryCube();
-    theoryCube.position.set(0,0,-7);
+    theoryCube.start();
 
     // SCENEGRAPH
     demoScene.add(camera);
@@ -313,13 +348,12 @@ function main()
     demoScene.add(luz4.pointLight);
     demoScene.add(luz4.pointLightHelper);
     
-
+    activeMaterial = diamond;
     //GUI
     var guiControls = {
         rotation: "Start",
         materials: "Diamond",
         modeList: "Solid",
-        color: "#ffffff"
     };
 
     var datGui = new dat.GUI();
@@ -330,7 +364,6 @@ function main()
     var rotationGui = datGui.add(guiControls, 'rotation', rotation).name('Rotate object');
     var materialsGui = datGui.add(guiControls, 'materials', materials).name('Material mode');
     var drawModeList = datGui.add(guiControls, 'modeList', nameList).name('Draw Mode');
-    var color = datGui.addColor(guiControls, 'color').name('Color');
 
     datGui.close();
 
@@ -339,7 +372,6 @@ function main()
     rotationGui.onChange(rotationChange);
     materialsGui.onChange(materialsGuiOnChange);
     drawModeList.onChange(drawModeListOnChange);
-    color.onChange(colorOnChange);
 
     // ACTION
     requestAnimationFrame(renderLoop);    

@@ -30,13 +30,6 @@ function drawModeListOnChange(event){
     }
 }
 
-function colorOnChange(event)
-{   
-    var children = activeMaterial;
-	//children.material.color = new THREE.Color(event);
-    console.log(children);
-}
-
 function materialsGuiOnChange(event){
     var pos;
     switch(event){
@@ -71,14 +64,14 @@ function materialsGuiOnChange(event){
         case "Theory":
             activeMaterial = theoryCube;
             pos = activeMaterial.position;
-            controls.target.set(pos.x,pos.y,pos.z);
-            camera.position.set(pos.x,pos.y,10);
+            controls.target.set(pos.x,pos.y,0);
+            camera.position.set(pos.x,pos.y,20);
             break;
 
         case "Initial":
             activeMaterial = theoryCube;
             pos = activeMaterial.position;
-            controls.target.set(pos.x,pos.y,pos.z);
+            controls.target.set(pos.x,pos.y,0);
             camera.position.set(pos.x,pos.y,50);
             break;
 
