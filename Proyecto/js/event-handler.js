@@ -31,8 +31,10 @@ function drawModeListOnChange(event){
 }
 
 function colorOnChange(event)
-{
-	diamond.children[0].material.color = new THREE.Color(event);
+{   
+    var children = activeMaterial;
+	//children.material.color = new THREE.Color(event);
+    console.log(children);
 }
 
 function materialsGuiOnChange(event){
@@ -42,36 +44,58 @@ function materialsGuiOnChange(event){
             activeMaterial = diamond;
             pos = activeMaterial.position;
             controls.target.set(pos.x,pos.y,pos.z);
+            camera.position.set(pos.x,pos.y,10);
             break;
 
         case "Steel":
             activeMaterial = steel;
             pos = activeMaterial.position;
             controls.target.set(pos.x,pos.y,pos.z);
+            camera.position.set(pos.x,pos.y,10);
             break;
 
         case "Glass":
             activeMaterial = glass;
             pos = activeMaterial.position;
             controls.target.set(pos.x,pos.y,pos.z);
+            camera.position.set(pos.x,pos.y,10);
             break;
 
         case "Rubber":
             activeMaterial = rubber;
             pos = activeMaterial.position;
             controls.target.set(pos.x,pos.y,pos.z);
+            camera.position.set(pos.x,pos.y,10);
             break;
+
+        case "Theory":
+            activeMaterial = theoryCube;
+            pos = activeMaterial.position;
+            controls.target.set(pos.x,pos.y,pos.z);
+            camera.position.set(pos.x,pos.y,10);
+            break;
+
+        case "Initial":
+            activeMaterial = theoryCube;
+            pos = activeMaterial.position;
+            controls.target.set(pos.x,pos.y,pos.z);
+            camera.position.set(pos.x,pos.y,50);
+            break;
+
         default:
             controls.target.set(5,5,5);
     }
     controls.update();
 }
 
-function changeScene(event) {
-    if (event == 'Demo') activeScene = demoScene;
-    else activeScene = theoryScene;
-    var scenePos = activeScene.position;
-
-    controls.target.set(scenePos.x,scenePos.y,scenePos.z);
-    controls.update();
+function rotationChange(event) {
+    if (event == "Start") {
+        activeMaterial.start();
+        console.log(event);
+    }
+    else {
+        activeMaterial.stop();
+        console.log(event);
+    }
+    console.log(activeMaterial.canRotate);
 }

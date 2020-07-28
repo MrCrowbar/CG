@@ -14,64 +14,106 @@ var steel;
 var glass;
 var rubber;
 var activeMaterial;
-
-class Shape extends THREE.Mesh
-{
-    constructor(color = "white")
-    {
-        super();
-        this.envMaps = "reflection";
-        this.color = color;
-        this.geometry = new THREE.DodecahedronGeometry(1, 0);
-        this.material = new THREE.MeshBasicMaterial({color: color});
-        var wireframe = new THREE.WireframeGeometry(this.geometry);
-        wireframe.color = "red";
-        var line = new THREE.LineSegments(wireframe);
-        line.material.depthTest = true;
-        line.material.color = new THREE.Color(0, 0, 0);
-        this.add(line);
-    }
-
-    setPhongMaterial(color,_shininess = 30.){
-        this.material = new THREE.MeshPhongMaterial({color: this.color, shininess: _shininess});
-    }
-    setLambertMaterial(color){
-        this.material = new THREE.MeshLambertMaterial({color: this.color});
-    }
-    setToonMaterial(color){
-        this.material = new THREE.MeshToonMaterial({color:this.color});
-    }
-    setPhysicalMaterial(color){
-        this.material = new THREE.MeshPhysicalMaterial({color:this.color});
-    }
-    setStandardMaterial(color){
-        this.material = new THREE.MeshStandardMaterial({color:this.color});
-    }
-}
-
+var theoryCube;
+var materialList = [];
 
 class Structure extends THREE.Group{
-    constructor(atoms,positions,color){
+    constructor(atoms,positions,texture,light){
         super();
+        var canRotate;
+        var textureFile = './images/textures/' + texture;
+        var geoTexture = new THREE.TextureLoader().load(textureFile);
         var geoSurface = new THREE.BoxGeometry(2.2,2.2,2.2);
-        var geoMaterial = new THREE.MeshStandardMaterial({color: color});
+        var geoMaterial = new THREE.MeshStandardMaterial({map: geoTexture});
         var surface = new THREE.Mesh(geoSurface,geoMaterial);
         surface.name = "Surface";
         surface.position.set(0,1,0);
         this.add(surface);
-
+        var atomColor = new THREE.Color(0xffffff); //0x615f5f
         var geometry = new THREE.SphereGeometry(0.1,8,6);
-        var material = new THREE.MeshStandardMaterial({color: "white"});
-
+        var material = new THREE.MeshStandardMaterial({color: atomColor});
         for (var i = 0; i < atoms; i++) {
             var sphere = new THREE.Mesh(geometry, material);
             sphere.position.set(positions[i][0], positions[i][1], positions[i][2]);
-            //points.push(new THREE.Vector3(positions[i][0], positions[i][1], positions[i][2]));
             sphere.name = "Atom " + i;
+            this.add(sphere);
+        }
+        for (var i = 0; i < 10; i++){
+            var randX = Math.floor(Math.random() * 15) - 15
+            var randY = Math.floor(Math.random() * 15) - 15
+            var randZ = Math.floor(Math.random() * 15) - 15
+            var sphere = new THREE.Mesh(geometry, material);
+            sphere.position.set(randX, randY, randZ);
             this.add(sphere);
         }
     }
 
+    start(){
+        this.canRotate = true;
+    }
+
+    stop(){
+        this.canRotate = false;
+    }
+
+    rotate(){
+        if (this.canRotate) {
+            this.rotation.x += 0.01;
+            this.rotation.y += 0.01;
+        }
+    }
+
+}
+class TheoryCube extends THREE.Group {
+    constructor(){
+        super();
+        var texture1 = new THREE.TextureLoader().load('./images/theory/fracture.png');
+        var texture2 = new THREE.TextureLoader().load('./images/theory/ductile-vs-brittle.png');
+        var texture3 = new THREE.TextureLoader().load('./images/theory/elastic.png');
+        var texture4 = new THREE.TextureLoader().load('./images/theory/atoms.png');
+        var texture5 = new THREE.TextureLoader().load('./images/theory/plastic.png');
+        var texture6 = new THREE.TextureLoader().load('./images/theory/young.png');
+
+        var geometry = new THREE.PlaneGeometry(14,10,1);
+
+        var geometryTop = new THREE.PlaneGeometry(14,14,1);
+        var geometryBottom = new THREE.PlaneGeometry(14,14,1);
+
+        var material1 = new THREE.MeshBasicMaterial({map: texture1});
+        var material2 = new THREE.MeshBasicMaterial({map: texture2});
+        var material3 = new THREE.MeshBasicMaterial({map: texture3});
+        var material4 = new THREE.MeshBasicMaterial({map: texture4});
+        var material5 = new THREE.MeshBasicMaterial({map: texture5});
+        var material6 = new THREE.MeshBasicMaterial({map: texture6});
+
+        var theoryPlane1 = new THREE.Mesh(geometry,material1);
+        var theoryPlane2 = new THREE.Mesh(geometry,material2);
+        var theoryPlane3 = new THREE.Mesh(geometry,material3);
+        var theoryPlane4 = new THREE.Mesh(geometry,material4);
+        var theoryPlane5 = new THREE.Mesh(geometryTop,material5);
+        var theoryPlane6 = new THREE.Mesh(geometryBottom,material6);
+
+        theoryPlane1.position.set(0,0,0);
+        theoryPlane2.position.set(7,0,7);
+        theoryPlane3.position.set(-7,0,7);
+        theoryPlane4.position.set(0,0,14);
+        theoryPlane5.position.set(0,5,7);
+        theoryPlane6.position.set(0,-5,7);
+
+        theoryPlane1.rotateY(180 * Math.PI/180);
+        theoryPlane2.rotateY(90 * Math.PI/180);
+        theoryPlane3.rotateY(-90 * Math.PI/180);
+        theoryPlane5.rotateX(-90 * Math.PI/180);
+        theoryPlane6.rotateX(90 * Math.PI/180);
+
+        this.add(theoryPlane1);
+        this.add(theoryPlane2);
+        this.add(theoryPlane3);
+        this.add(theoryPlane4);
+        this.add(theoryPlane5);
+        this.add(theoryPlane6);
+
+    }
 }
 
 class Luz extends THREE.Light{
@@ -79,8 +121,8 @@ class Luz extends THREE.Light{
         super();
         this.color = _color;
         this.intensity = _intensity;
-        //this.ambientLight = new THREE.AmbientLight(this.color, 0.0);
         this.pointLight = new THREE.PointLight(this.color, this.intensity);
+        this.name = "LUZ";
         this.sphereSize = 0.1;
         this.pointLightHelper = new THREE.PointLightHelper(this.pointLight, this.sphereSize);
     }
@@ -97,10 +139,10 @@ function addStructure(scene,structure){
 
 function update()
 {
-    diamond.rotation.y += 0.01;
-    steel.rotation.y -= 0.01;
-    glass.rotation.y += 0.01;
-    rubber.rotation.y -= 0.01;
+    diamond.rotate();
+    steel.rotate();
+    glass.rotate();
+    rubber.rotate();
 }
 
 function renderLoop() 
@@ -117,14 +159,14 @@ function main()
     canvas = document.getElementById("canvas");
 
     // SCENE
+    var demoBackground = new THREE.TextureLoader().load('./images/stars.jpg');
     demoScene = new THREE.Scene();
-    theoryScene = new THREE.Scene();
-    theoryScene.background = new THREE.Color( 0xf0f0f0 );
+    demoScene.background = demoBackground;
     activeScene = demoScene;
 
     // CAMERA
     camera = new THREE.PerspectiveCamera(60., canvas.width / canvas.height, 0.01, 10000.);  // CAMERA
-    camera.position.set(0., 2., 8.);
+    camera.position.set(0, 0, 50);
     camera.lookAt(activeScene.position);
     camera.up.set(0,1,0);
     controls = new THREE.OrbitControls(camera, canvas);
@@ -144,6 +186,16 @@ function main()
     var floor = new THREE.Mesh(new THREE.PlaneGeometry(20, 20), new THREE.MeshBasicMaterial({color: "grey",wireframe: true}));          
     floor.rotation.x = -Math.PI / 2.;
 
+    var listener = new THREE.AudioListener();
+    camera.add(listener);
+    var sound = new THREE.Audio(listener);
+    var audioLoader = new THREE.AudioLoader();
+    audioLoader.load('./music/Subwoofer_Lullaby.mp3', function(buffer) {
+        sound.setBuffer(buffer);
+        sound.setLoop(true);
+        sound.setVolume(0.5);
+        sound.play();
+    });
     
     //ATOMS POSITIONS
     var positions = [
@@ -171,9 +223,13 @@ function main()
             [-1,2,-1],
         ];
 
-    diamond = new Structure(18,positions,"blue");
-    diamond.position.set(-7.5,0,0);
+    var luz1 = new Luz();
+    luz1.pointLight.position.set(-30,5,0);
+    diamond = new Structure(18,positions,'diamond.png',luz1);
+    diamond.position.set(-30,0,0);
+    diamond.start();
     addStructure(demoScene,diamond);
+    materialList.push(diamond);
 
     positions = [
         [1,0,1],
@@ -188,9 +244,11 @@ function main()
         [-1,2,-1],
         [1,2,-1],
     ];
-
-    steel = new Structure(9,positions,"grey");
-    steel.position.set(-2.5,0,0);
+    var luz2 = new Luz();
+    luz2.pointLight.position.set(0,30,0);
+    steel = new Structure(9,positions,'iron.png',luz1);
+    steel.position.set(0,25,0);
+    steel.start();
     addStructure(demoScene,steel);
 
     //GLASS
@@ -203,9 +261,11 @@ function main()
 
         [0,1,0],
     ];
-
-    glass = new Structure(5,positions,"yellow");
-    glass.position.set(2.5,0,0);
+    var luz3 = new Luz();
+    luz3.pointLight.position.set(30,5,0);
+    glass = new Structure(5,positions,'glass.png',luz1);
+    glass.position.set(30,0,0);
+    glass.start();
     addStructure(demoScene,glass);
 
     //RUBBER
@@ -229,38 +289,20 @@ function main()
         [-1,1.2,0]
     ];
 
-    rubber = new Structure(13,positions,"brown");
-    rubber.position.set(7.5,0,0);
+    var luz4 = new Luz();
+    luz4.pointLight.position.set(0,-20,0);
+    rubber = new Structure(13,positions,'rubber.png',luz1);
+    rubber.position.set(0,-25,0);
+    rubber.start();
     addStructure(demoScene,rubber);
 
-
-    var luz1 = new Luz();
-    luz1.pointLight.position.set(4,5,0);
-
-    var luz2 = new Luz();
-    luz2.pointLight.position.set(-4,5,0);
-
     activeMaterial = diamond;
-
-    var texture = new THREE.TextureLoader().load('./images/Youngs_Modulus.png');
-    var geometry = new THREE.BoxGeometry(10,10,10);
-    var material = new THREE.MeshBasicMaterial({map: texture});
-    var mesh = new THREE.Mesh(geometry,material);
-    mesh.position.set(0,0,0);
-
-    var luz3 = new Luz();
-    luz3.pointLight.position.set(0,12,0);
-
-    theoryScene.add(mesh);
-
-    var ambientLight = new THREE.AmbientLight('white', 0.0);
-    theoryScene.add(ambientLight);
-
+    theoryCube = new TheoryCube();
+    theoryCube.position.set(0,0,-7);
 
     // SCENEGRAPH
-    demoScene.add(floor);
-    demoScene.add(axesHelper);
     demoScene.add(camera);
+    demoScene.add(theoryCube);
 
     demoScene.add(luz1.pointLight);
     demoScene.add(luz1.pointLightHelper);
@@ -268,34 +310,33 @@ function main()
     demoScene.add(luz2.pointLightHelper);
     demoScene.add(luz3.pointLight);
     demoScene.add(luz3.pointLightHelper);
-
-    theoryScene.add(luz1.pointLight.clone());
-    //theoryScene.add(luz1.pointLightHelper);
-    theoryScene.add(luz2.pointLight.clone());
-    //theoryScene.add(luz2.pointLightHelper);
-    theoryScene.add(luz3.pointLight.clone());
+    demoScene.add(luz4.pointLight);
+    demoScene.add(luz4.pointLightHelper);
+    
 
     //GUI
     var guiControls = {
-        scenes: "Demo",
+        rotation: "Start",
         materials: "Diamond",
         modeList: "Solid",
         color: "#ffffff"
     };
 
     var datGui = new dat.GUI();
-    var scenes = ["Demo","Theory"];
-    var materials = ["Diamond","Steel","Glass","Rubber"];
+    var rotation = ["Start","Stop"];
+    var materials = ["Diamond","Steel","Glass","Rubber","Theory","Initial"];
     var nameList = ["Solid","Wireframe","Invisible","Visible"];
-    var scenesGui = datGui.add(guiControls, 'scenes', scenes).name('Current Scene');
+
+    var rotationGui = datGui.add(guiControls, 'rotation', rotation).name('Rotate object');
     var materialsGui = datGui.add(guiControls, 'materials', materials).name('Material mode');
     var drawModeList = datGui.add(guiControls, 'modeList', nameList).name('Draw Mode');
     var color = datGui.addColor(guiControls, 'color').name('Color');
+
     datGui.close();
 
     // EVENT-HANDLERS
     window.addEventListener('resize', resizeWindow, false);
-    scenesGui.onChange(changeScene);
+    rotationGui.onChange(rotationChange);
     materialsGui.onChange(materialsGuiOnChange);
     drawModeList.onChange(drawModeListOnChange);
     color.onChange(colorOnChange);
